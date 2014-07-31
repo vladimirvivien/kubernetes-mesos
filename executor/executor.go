@@ -12,8 +12,8 @@ import (
 const defaultChanSize = 1024
 
 type kuberTask struct {
-	mesosTaskInfo     *mesos.TaskInfo
-	containerManifest *api.ContainerManifest
+	mesosTaskInfo *mesos.TaskInfo
+	pod           *kubelet.Pod
 }
 
 // KuberneteExecutor is an mesos executor that runs pods
@@ -45,7 +45,7 @@ func (k *KuberneteExecutor) RunKubelet() {
 func (k *KuberneteExecutor) gatherContainerManifests() []api.ContainerManifest {
 	var manifests []api.ContainerManifest
 	for _, task := range k.tasks {
-		manifests = append(manifests, *task.containerManifest)
+		manifests = append(manifests, task.pod.Manifest)
 	}
 	return manifests
 }
@@ -99,21 +99,24 @@ func (k *KuberneteExecutor) LaunchTask(driver mesos.ExecutorDriver, taskInfo *me
 		return
 	}
 
-	// Add the task.
-	k.tasks[taskId] = &kuberTask{
-		mesosTaskInfo:     taskInfo,
-		containerManifest: &manifest,
+	// Create the task.
+	task := &kuberTask{
+		mesosTaskInfo: taskInfo,
+		pod: &kubelet.Pod{
+			Name:      manifest.ID,
+			Namespace: "etcd", // TODO(CD): smite all hardcoded values
+			Manifest:  manifest,
+		},
 	}
+
+	// Add the task.
+	k.tasks[taskId] = task
 
 	// Send the pod updates to the channel.
 	// TODO(yifan): Replace SET with REMOVE when it's implemented.
 	update := kubelet.PodUpdate{
 		Pods: []kubelet.Pod{
-			kubelet.Pod{
-				Name:      manifest.ID,
-				Namespace: "etcd",
-				Manifest:  manifest,
-			},
+			*task.pod,
 		},
 		Op: kubelet.SET,
 	}
@@ -134,17 +137,26 @@ func (k *KuberneteExecutor) KillTask(driver mesos.ExecutorDriver, taskId *mesos.
 	}
 
 	tid := taskId.GetValue()
-	if _, ok := k.tasks[tid]; !ok {
+
+	kuberTask, ok := k.tasks[tid]
+
+	if !ok {
 		log.Infof("Failed to kill task, unknown task %v\n", tid)
 		return
 	}
+
 	delete(k.tasks, tid)
 
 	// Send the pod updates to the channel.
 	// TODO(yifan): Replace SET with REMOVE when it's implemented.
 	update := kubelet.PodUpdate{
-		Pods: []kubelet.Pod{},
-		Op:   kubelet.SET,
+		Pods: []kubelet.Pod{
+			kubelet.Pod{
+				Namespace: kuberTask.pod.Namespace,
+				Name: kuberTask.pod.Name,
+			},
+		},
+		Op:   kubelet.REMOVE,
 	}
 	k.updateChan <- update
 	// TODO(yifan): Check the result of the kill event.
