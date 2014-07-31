@@ -47,6 +47,7 @@ var (
 	minionPort                  = flag.Uint("minion_port", 10250, "The port at which kubelet will be listening on the minions.")
 	mesosMaster                 = flag.String("mesos_master", "localhost:5050", "Location of leading Mesos master")
 	executorURI                 = flag.String("executor_uri", "", "URI of dir that contains the executor executable")
+	dockerHost                  = flag.String("docker_host", "unix:///var/run/docker.sock", "Path to the docker daemon's socket")
 	etcdServerList, machineList util.StringList
 )
 
@@ -107,6 +108,13 @@ func main() {
 			Value: proto.String("./kubernetes-executor"),
 			Uris: []*mesos.CommandInfo_URI{
 				&mesos.CommandInfo_URI{Value: executorURI},
+			},
+			Environment: &mesos.Environment{Variables: []*mesos.Environment_Variable{
+					&mesos.Environment_Variable{
+						Name: proto.String("DOCKER_HOST"),
+						Value: proto.String(*dockerHost),
+					},
+				},
 			},
 		},
 		Name:   proto.String("Executor for kubelet"),
