@@ -46,68 +46,68 @@
 			"Rev": "f5ac12b15e49095c60ae0acc6da0e28d47e2a29f"
 		},
 		{
-			"ImportPath": "github.com/GoogleCloudPlatform/kubernetes/pkg/api",
-			"Rev": "46bb48cf13945f28f4af63ef55f7aac66d059127"
+			"ImportPath": "github.com/mesosphere/kubernetes/pkg/api",
+			"Rev": "25040c859324773058e8378d994831311d29ba19"
 		},
 		{
-			"ImportPath": "github.com/GoogleCloudPlatform/kubernetes/pkg/apiserver",
-			"Rev": "46bb48cf13945f28f4af63ef55f7aac66d059127"
+			"ImportPath": "github.com/mesosphere/kubernetes/pkg/apiserver",
+			"Rev": "25040c859324773058e8378d994831311d29ba19"
 		},
 		{
-			"ImportPath": "github.com/GoogleCloudPlatform/kubernetes/pkg/client",
-			"Rev": "46bb48cf13945f28f4af63ef55f7aac66d059127"
+			"ImportPath": "github.com/mesosphere/kubernetes/pkg/client",
+			"Rev": "25040c859324773058e8378d994831311d29ba19"
 		},
 		{
-			"ImportPath": "github.com/GoogleCloudPlatform/kubernetes/pkg/cloudprovider",
-			"Rev": "46bb48cf13945f28f4af63ef55f7aac66d059127"
+			"ImportPath": "github.com/mesosphere/kubernetes/pkg/cloudprovider",
+			"Rev": "25040c859324773058e8378d994831311d29ba19"
 		},
 		{
-			"ImportPath": "github.com/GoogleCloudPlatform/kubernetes/pkg/health",
-			"Rev": "46bb48cf13945f28f4af63ef55f7aac66d059127"
+			"ImportPath": "github.com/mesosphere/kubernetes/pkg/health",
+			"Rev": "25040c859324773058e8378d994831311d29ba19"
 		},
 		{
-			"ImportPath": "github.com/GoogleCloudPlatform/kubernetes/pkg/healthz",
-			"Rev": "46bb48cf13945f28f4af63ef55f7aac66d059127"
+			"ImportPath": "github.com/mesosphere/kubernetes/pkg/healthz",
+			"Rev": "25040c859324773058e8378d994831311d29ba19"
 		},
 		{
-			"ImportPath": "github.com/GoogleCloudPlatform/kubernetes/pkg/httplog",
-			"Rev": "46bb48cf13945f28f4af63ef55f7aac66d059127"
+			"ImportPath": "github.com/mesosphere/kubernetes/pkg/httplog",
+			"Rev": "25040c859324773058e8378d994831311d29ba19"
 		},
 		{
-			"ImportPath": "github.com/GoogleCloudPlatform/kubernetes/pkg/kubelet",
-			"Rev": "46bb48cf13945f28f4af63ef55f7aac66d059127"
+			"ImportPath": "github.com/mesosphere/kubernetes/pkg/kubelet",
+			"Rev": "25040c859324773058e8378d994831311d29ba19"
 		},
 		{
-			"ImportPath": "github.com/GoogleCloudPlatform/kubernetes/pkg/labels",
-			"Rev": "46bb48cf13945f28f4af63ef55f7aac66d059127"
+			"ImportPath": "github.com/mesosphere/kubernetes/pkg/labels",
+			"Rev": "25040c859324773058e8378d994831311d29ba19"
 		},
 		{
-			"ImportPath": "github.com/GoogleCloudPlatform/kubernetes/pkg/master",
-			"Rev": "46bb48cf13945f28f4af63ef55f7aac66d059127"
+			"ImportPath": "github.com/mesosphere/kubernetes/pkg/master",
+			"Rev": "25040c859324773058e8378d994831311d29ba19"
 		},
 		{
-			"ImportPath": "github.com/GoogleCloudPlatform/kubernetes/pkg/registry",
-			"Rev": "46bb48cf13945f28f4af63ef55f7aac66d059127"
+			"ImportPath": "github.com/mesosphere/kubernetes/pkg/registry",
+			"Rev": "25040c859324773058e8378d994831311d29ba19"
 		},
 		{
-			"ImportPath": "github.com/GoogleCloudPlatform/kubernetes/pkg/scheduler",
-			"Rev": "46bb48cf13945f28f4af63ef55f7aac66d059127"
+			"ImportPath": "github.com/mesosphere/kubernetes/pkg/scheduler",
+			"Rev": "25040c859324773058e8378d994831311d29ba19"
 		},
 		{
-			"ImportPath": "github.com/GoogleCloudPlatform/kubernetes/pkg/tools",
-			"Rev": "46bb48cf13945f28f4af63ef55f7aac66d059127"
+			"ImportPath": "github.com/mesosphere/kubernetes/pkg/tools",
+			"Rev": "25040c859324773058e8378d994831311d29ba19"
 		},
 		{
-			"ImportPath": "github.com/GoogleCloudPlatform/kubernetes/pkg/util",
-			"Rev": "46bb48cf13945f28f4af63ef55f7aac66d059127"
+			"ImportPath": "github.com/mesosphere/kubernetes/pkg/util",
+			"Rev": "25040c859324773058e8378d994831311d29ba19"
 		},
 		{
-			"ImportPath": "github.com/GoogleCloudPlatform/kubernetes/pkg/volume",
-			"Rev": "46bb48cf13945f28f4af63ef55f7aac66d059127"
+			"ImportPath": "github.com/mesosphere/kubernetes/pkg/volume",
+			"Rev": "25040c859324773058e8378d994831311d29ba19"
 		},
 		{
-			"ImportPath": "github.com/GoogleCloudPlatform/kubernetes/pkg/watch",
-			"Rev": "46bb48cf13945f28f4af63ef55f7aac66d059127"
+			"ImportPath": "github.com/mesosphere/kubernetes/pkg/watch",
+			"Rev": "25040c859324773058e8378d994831311d29ba19"
 		},
 		{
 			"ImportPath": "github.com/coreos/go-etcd/etcd",
