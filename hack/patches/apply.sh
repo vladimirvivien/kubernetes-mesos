@@ -47,6 +47,9 @@ pmap=(
   [mgo]=github.com/mesos/mesos-go
 )
 
+patch_flags=""
+test "$PATCH_TARGET" = "patch" || patch_flags="--verbose"
+
 # TODO(jdef) at some point we should be able to apply patches with
 # multiple hunks, ala:
 # http://unix.stackexchange.com/questions/65698/how-to-make-patch-ignore-already-applied-hunks
@@ -55,7 +58,7 @@ for k in "${!pmap[@]}"; do
   repo="${pmap["${k}"]}"
   echo "Checking patches for ${k}.. ($repo)"
   find "${home}" -type f -name "${k}---issue*.patch" | while IFS= read -r f; do
-    cmd=( patch -p1 -s -r- -i"$f" )
+    cmd=( patch -p1 -s -r- $patch_flags -i"$f" )
     echo -n -E "${cmd[@]}"
     output=$(cd "${pkg}/src/${repo}" && pwd && "${cmd[@]}") && echo || {
       echo -E "$output" | \

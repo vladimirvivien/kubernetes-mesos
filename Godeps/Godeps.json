@@ -45,6 +45,11 @@
 			"Rev": "575bf6dcd09c84cb6622db3605cbc3abdb4e1baa"
 		},
 		{
+			"ImportPath": "github.com/GoogleCloudPlatform/kubernetes/cmd/kubelet/app",
+			"Comment": "v0.14.0",
+			"Rev": "575bf6dcd09c84cb6622db3605cbc3abdb4e1baa"
+		},
+		{
 			"ImportPath": "github.com/GoogleCloudPlatform/kubernetes/pkg/admission",
 			"Comment": "v0.14.0",
 			"Rev": "575bf6dcd09c84cb6622db3605cbc3abdb4e1baa"

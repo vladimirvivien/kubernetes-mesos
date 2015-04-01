@@ -44,7 +44,7 @@ TAGS		?=
 BUILDDIR	?= $(current_dir)/_build
 GOPATH		:= $(shell uname | grep -e ^CYGWIN >/dev/null && cygpath --mixed "$(BUILDDIR)" || echo -E "$(BUILDDIR)")
 
-.PHONY: all error require-godep require-vendor install info bootstrap format test patch version test.v test.vv clean lint vet fix prepare
+.PHONY: all error require-godep require-vendor install info bootstrap format test patch.v patch version test.v test.vv clean lint vet fix prepare
 
 # FRAMEWORK_FLAGS := -v -x -tags '$(TAGS)'
 FRAMEWORK_FLAGS := -tags '$(TAGS)'
@@ -114,8 +114,8 @@ prepare:
 	rsync -au $(current_dir)/Godeps/_workspace/ $(BUILDDIR)
 	(xdir=$$(dirname $(BUILDDIR)/src/$(K8SM_GO_PACKAGE)); mkdir -p $$xdir && cd $$xdir && ln -s $(current_dir) $$(basename $(K8SM_GO_PACKAGE)))
 
-patch: prepare $(PATCH_SCRIPT)
-	env GOPATH=$(GOPATH) USR_LOCAL_BASH=$(ALT_BASH_SHELL) $(PATCH_SCRIPT)
+patch patch.v: prepare $(PATCH_SCRIPT)
+	env GOPATH=$(GOPATH) USR_LOCAL_BASH=$(ALT_BASH_SHELL) PATCH_TARGET=$@ $(PATCH_SCRIPT)
 
 version: $(GIT_VERSION_FILE)
 
