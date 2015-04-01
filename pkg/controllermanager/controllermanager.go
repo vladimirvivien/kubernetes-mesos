@@ -62,22 +62,6 @@ func NewCMServer() *CMServer {
 	return s
 }
 
-// NewHyperkubeServer creates a new hyperkube Server object that includes the
-// description and flags.
-func NewHyperkubeServer() *hyperkube.Server {
-	s := NewCMServer()
-
-	hks := hyperkube.Server{
-		SimpleUsage: "controller-manager",
-		Long:        "A server that runs a set of active components. This includes replication controllers, service endpoints and nodes.",
-		Run: func(_ *hyperkube.Server, args []string) error {
-			return s.Run(args)
-		},
-	}
-	s.AddFlags(hks.Flags())
-	return &hks
-}
-
 // AddFlags adds flags for a specific CMServer to the specified FlagSet
 func (s *CMServer) AddFlags(fs *pflag.FlagSet) {
 	s.CMServer.AddFlags(fs)

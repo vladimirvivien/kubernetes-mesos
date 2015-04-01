@@ -36,7 +36,6 @@ import (
 	"github.com/GoogleCloudPlatform/kubernetes/pkg/client"
 	"github.com/GoogleCloudPlatform/kubernetes/pkg/client/record"
 	"github.com/GoogleCloudPlatform/kubernetes/pkg/clientauth"
-	"github.com/GoogleCloudPlatform/kubernetes/pkg/hyperkube"
 	"github.com/GoogleCloudPlatform/kubernetes/pkg/kubelet"
 	"github.com/GoogleCloudPlatform/kubernetes/pkg/master/ports"
 	"github.com/GoogleCloudPlatform/kubernetes/pkg/tools"
@@ -114,6 +113,17 @@ type SchedulerServer struct {
 	driver     atomic.Value // bindings.SchedulerDriver
 }
 
+type hyperkubeInterface interface {
+	// FindServer will find a specific server named name.
+	FindServer(name string) (hyperkubeInterface, error)
+
+	// The executable name, used for help and soft-link invocation
+	Name() string
+
+	// Flags returns a flagset for "global" flags.
+	Flags() *pflag.FlagSet
+}
+
 // useful for unit testing specific funcs
 type schedulerProcessInterface interface {
 	Done() <-chan struct{}
@@ -151,23 +161,6 @@ func NewSchedulerServer() *SchedulerServer {
 	}
 
 	return &s
-}
-
-// NewHyperkubeServer creates a new hyperkube Server object that includes the
-// description and flags.
-func NewHyperkubeServer() *hyperkube.Server {
-	s := NewSchedulerServer()
-
-	hks := hyperkube.Server{
-		SimpleUsage: "scheduler",
-		Long: `Implements the Kubernetes-Mesos scheduler. This will launch Mesos tasks which
-results in pods assigned to kubelets based on capacity and constraints.`,
-		Run: func(hks *hyperkube.Server, args []string) error {
-			return s.Run(hks, args)
-		},
-	}
-	s.AddHyperkubeFlags(hks.Flags())
-	return &hks
 }
 
 func (s *SchedulerServer) addCoreFlags(fs *pflag.FlagSet) {
@@ -246,7 +239,7 @@ func (s *SchedulerServer) serveFrameworkArtifact(path string) (string, string) {
 	return hostURI, base
 }
 
-func (s *SchedulerServer) prepareExecutorInfo(hks *hyperkube.Server) *mesos.ExecutorInfo {
+func (s *SchedulerServer) prepareExecutorInfo(hks hyperkubeInterface) *mesos.ExecutorInfo {
 	ci := &mesos.CommandInfo{
 		Shell: proto.Bool(false),
 	}
@@ -395,7 +388,7 @@ func (s *SchedulerServer) getDriver() (driver bindings.SchedulerDriver) {
 	return
 }
 
-func (s *SchedulerServer) Run(hks *hyperkube.Server, _ []string) error {
+func (s *SchedulerServer) Run(hks hyperkubeInterface, _ []string) error {
 
 	schedulerProcess, driverFactory, etcdClient, ehash := s.bootstrap(hks)
 
@@ -478,7 +471,7 @@ func validateLeadershipTransition(desired, current string) {
 	}
 }
 
-func (s *SchedulerServer) bootstrap(hks *hyperkube.Server) (*ha.SchedulerProcess, ha.DriverFactory, tools.EtcdClient, uint64) {
+func (s *SchedulerServer) bootstrap(hks hyperkubeInterface) (*ha.SchedulerProcess, ha.DriverFactory, tools.EtcdClient, uint64) {
 
 	s.FrameworkName = strings.TrimSpace(s.FrameworkName)
 	if s.FrameworkName == "" {
@@ -583,7 +576,7 @@ func (s *SchedulerServer) bootstrap(hks *hyperkube.Server) (*ha.SchedulerProcess
 	return schedulerProcess, driverFactory, etcdClient, ehash
 }
 
-func (s *SchedulerServer) failover(driver bindings.SchedulerDriver, hks *hyperkube.Server) error {
+func (s *SchedulerServer) failover(driver bindings.SchedulerDriver, hks hyperkubeInterface) error {
 	if driver != nil {
 		stat, err := driver.Stop(true)
 		if stat != mesos.Status_DRIVER_STOPPED {

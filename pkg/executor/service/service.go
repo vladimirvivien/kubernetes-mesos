@@ -15,11 +15,10 @@ import (
 	"github.com/GoogleCloudPlatform/kubernetes/pkg/api"
 	"github.com/GoogleCloudPlatform/kubernetes/pkg/credentialprovider"
 	_ "github.com/GoogleCloudPlatform/kubernetes/pkg/healthz"
-	"github.com/GoogleCloudPlatform/kubernetes/pkg/hyperkube"
 	"github.com/GoogleCloudPlatform/kubernetes/pkg/kubelet"
 	kconfig "github.com/GoogleCloudPlatform/kubernetes/pkg/kubelet/config"
 	"github.com/GoogleCloudPlatform/kubernetes/pkg/kubelet/dockertools"
-	"github.com/GoogleCloudPlatform/kubernetes/pkg/kubelet/server"
+	"github.com/GoogleCloudPlatform/kubernetes/cmd/kubelet/app"
 	"github.com/GoogleCloudPlatform/kubernetes/pkg/util"
 	log "github.com/golang/glog"
 	"github.com/kardianos/osext"
@@ -35,7 +34,7 @@ const (
 )
 
 type KubeletExecutorServer struct {
-	*server.KubeletServer
+	*app.KubeletServer
 	RunProxy               bool
 	ProxyLogV              int
 	ProxyExec              string
@@ -45,9 +44,20 @@ type KubeletExecutorServer struct {
 	SuicideTimeout         time.Duration
 }
 
+type hyperkubeInterface interface {
+	// FindServer will find a specific server named name.
+	FindServer(name string) (hyperkubeInterface, error)
+
+	// The executable name, used for help and soft-link invocation
+	Name() string
+
+	// Flags returns a flagset for "global" flags.
+	Flags() *pflag.FlagSet
+}
+
 func NewKubeletExecutorServer() *KubeletExecutorServer {
 	k := &KubeletExecutorServer{
-		KubeletServer:          server.NewKubeletServer(),
+		KubeletServer:          app.NewKubeletServer(),
 		RunProxy:               true,
 		ProxyExec:              "./kube-proxy",
 		ProxyLogfile:           "./proxy-log",
@@ -76,30 +86,6 @@ func NewHyperKubeletExecutorServer() *KubeletExecutorServer {
 	return s
 }
 
-// NewHyperkubeServer creates a new hyperkube Server object that includes the
-// description and flags.
-func NewHyperkubeServer() *hyperkube.Server {
-	s := NewHyperKubeletExecutorServer()
-	hks := hyperkube.Server{
-		SimpleUsage: "executor",
-		Long: `The kubelet-executor binary is responsible for maintaining a set of containers
-on a particular node. It syncs data from a specialized Mesos source that tracks
-task launches and kills. It then queries Docker to see what is currently
-running.  It synchronizes the configuration data, with the running set of
-containers by starting or stopping Docker containers.`,
-		Run: func(hks *hyperkube.Server, args []string) error {
-			return s.Run(hks, args)
-		},
-	}
-	s.AddHyperkubeFlags(hks.Flags())
-	return &hks
-}
-
-// always panics, must call either AddStandaloneFlags or AddHyperkubeFlags
-func (s *KubeletExecutorServer) AddFlags(fs *pflag.FlagSet) {
-	panic("not supported, must call either AddStandaloneFlags or AddHyperkubeFlags")
-}
-
 func (s *KubeletExecutorServer) addCoreFlags(fs *pflag.FlagSet) {
 	s.KubeletServer.AddFlags(fs)
 	fs.BoolVar(&s.RunProxy, "run_proxy", s.RunProxy, "Maintain a running kube-proxy instance as a child proc of this kubelet-executor.")
@@ -120,7 +106,7 @@ func (s *KubeletExecutorServer) AddHyperkubeFlags(fs *pflag.FlagSet) {
 }
 
 // Run runs the specified KubeletExecutorServer.
-func (s *KubeletExecutorServer) Run(hks *hyperkube.Server, _ []string) error {
+func (s *KubeletExecutorServer) Run(hks hyperkubeInterface, _ []string) error {
 	util.ReallyCrash = s.ReallyCrashForTesting
 	rand.Seed(time.Now().UTC().UnixNano())
 
@@ -137,7 +123,7 @@ func (s *KubeletExecutorServer) Run(hks *hyperkube.Server, _ []string) error {
 
 	credentialprovider.SetPreferredDockercfgPath(s.RootDirectory)
 
-	kcfg := server.KubeletConfig{
+	kcfg := app.KubeletConfig{
 		Address:                 s.Address,
 		AllowPrivileged:         s.AllowPrivileged,
 		HostnameOverride:        s.HostnameOverride,
@@ -160,11 +146,11 @@ func (s *KubeletExecutorServer) Run(hks *hyperkube.Server, _ []string) error {
 		KubeClient:              client,
 		EtcdClient:              kubelet.EtcdClientOrDie(util.StringList{}, ""), // this kubelet doesn't use etcd
 		MasterServiceNamespace:  s.MasterServiceNamespace,
-		VolumePlugins:           server.ProbeVolumePlugins(),
+		VolumePlugins:           app.ProbeVolumePlugins(),
 	}
 
 	finished := make(chan struct{})
-	server.RunKubelet(&kcfg, server.KubeletBuilder(func(kc *server.KubeletConfig) (server.KubeletBootstrap, *kconfig.PodConfig, error) {
+	app.RunKubelet(&kcfg, app.KubeletBuilder(func(kc *app.KubeletConfig) (app.KubeletBootstrap, *kconfig.PodConfig, error) {
 		return s.createAndInitKubelet(kc, hks, finished)
 	}))
 
@@ -181,7 +167,7 @@ func defaultBindingAddress() string {
 	}
 }
 
-func (ks *KubeletExecutorServer) createAndInitKubelet(kc *server.KubeletConfig, hks *hyperkube.Server, finished chan struct{}) (server.KubeletBootstrap, *kconfig.PodConfig, error) {
+func (ks *KubeletExecutorServer) createAndInitKubelet(kc *app.KubeletConfig, hks hyperkubeInterface, finished chan struct{}) (app.KubeletBootstrap, *kconfig.PodConfig, error) {
 
 	watch := kubelet.SetupEventSending(kc.KubeClient, kc.Hostname)
 	pc := kconfig.NewPodConfig(kconfig.PodConfigNotificationSnapshotAndUpdates)
@@ -279,7 +265,7 @@ type kubeletExecutor struct {
 	etcdConfigFile         string
 	totalMaxDeadContainers uint
 	dockerClient           dockertools.DockerInterface
-	hks                    *hyperkube.Server
+	hks                    hyperkubeInterface
 	kubeletFinished        chan struct{}   // closed once kubelet.Run() returns
 	executorDone           <-chan struct{} // from KubeletExecutor.Done()
 }

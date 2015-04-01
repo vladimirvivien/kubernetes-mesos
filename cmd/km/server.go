@@ -74,8 +74,8 @@ func (s *Server) Flags() *pflag.FlagSet {
 }
 
 func (s *Server) FindServer(name string) (*Server, error) {
-       if s == nil {
-               return nil, errors.New("no hyperkube server present")
-       }
-       return s.hk.FindServer(name)
+	if s == nil {
+		return nil, errors.New("no hyperkube server present")
+	}
+	return s.hk.FindServer(name)
 }
