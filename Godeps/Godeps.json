@@ -15,6 +15,11 @@
 			"Rev": "7dda39b2e7d5e265014674c5af696ba4186679e9"
 		},
 		{
+			"ImportPath": "code.google.com/p/go.net/spdy",
+			"Comment": "null-240",
+			"Rev": "937a34c9de13c766c814510f76bca091dee06028"
+		},
+		{
 			"ImportPath": "code.google.com/p/google-api-go-client/compute/v1",
 			"Comment": "release-105",
 			"Rev": "98c78185197025f935947caac56a7b6d022f89d2"
@@ -116,6 +121,11 @@
 		},
 		{
 			"ImportPath": "github.com/GoogleCloudPlatform/kubernetes/pkg/credentialprovider",
+			"Comment": "v0.14.0",
+			"Rev": "575bf6dcd09c84cb6622db3605cbc3abdb4e1baa"
+		},
+		{
+			"ImportPath": "github.com/GoogleCloudPlatform/kubernetes/pkg/fields",
 			"Comment": "v0.14.0",
 			"Rev": "575bf6dcd09c84cb6622db3605cbc3abdb4e1baa"
 		},
@@ -240,6 +250,11 @@
 			"Rev": "575bf6dcd09c84cb6622db3605cbc3abdb4e1baa"
 		},
 		{
+			"ImportPath": "github.com/GoogleCloudPlatform/kubernetes/pkg/registry/secret",
+			"Comment": "v0.14.0",
+			"Rev": "575bf6dcd09c84cb6622db3605cbc3abdb4e1baa"
+		},
+		{
 			"ImportPath": "github.com/GoogleCloudPlatform/kubernetes/pkg/registry/service",
 			"Comment": "v0.14.0",
 			"Rev": "575bf6dcd09c84cb6622db3605cbc3abdb4e1baa"
@@ -320,6 +335,11 @@
 			"Rev": "575bf6dcd09c84cb6622db3605cbc3abdb4e1baa"
 		},
 		{
+			"ImportPath": "github.com/GoogleCloudPlatform/kubernetes/plugin/pkg/admission/namespace/lifecycle",
+			"Comment": "v0.14.0",
+			"Rev": "575bf6dcd09c84cb6622db3605cbc3abdb4e1baa"
+		},
+		{
 			"ImportPath": "github.com/GoogleCloudPlatform/kubernetes/plugin/pkg/admission/resourcedefaults",
 			"Comment": "v0.14.0",
 			"Rev": "575bf6dcd09c84cb6622db3605cbc3abdb4e1baa"
@@ -340,6 +360,11 @@
 			"Rev": "575bf6dcd09c84cb6622db3605cbc3abdb4e1baa"
 		},
 		{
+			"ImportPath": "github.com/GoogleCloudPlatform/kubernetes/third_party/golang/netutil",
+			"Comment": "v0.14.0",
+			"Rev": "575bf6dcd09c84cb6622db3605cbc3abdb4e1baa"
+		},
+		{
 			"ImportPath": "github.com/Sirupsen/logrus",
 			"Comment": "v0.6.2-10-g51fe59a",
 			"Rev": "51fe59aca108dc5680109e7b2051cbdcfa5a253c"
@@ -352,6 +377,10 @@
 		{
 			"ImportPath": "github.com/davecgh/go-spew/spew",
 			"Rev": "1aaf839fb07e099361e445273993ccd9adc21b07"
+		},
+		{
+			"ImportPath": "github.com/daviddengcn/go-colortext",
+			"Rev": "b5c0891944c2f150ccc9d02aecf51b76c14c2948"
 		},
 		{
 			"ImportPath": "github.com/docker/docker/pkg/archive",
@@ -384,6 +413,11 @@
 			"Rev": "ed6685369740035b0af9675bf9add52d0af7657b"
 		},
 		{
+			"ImportPath": "github.com/docker/docker/pkg/term",
+			"Comment": "v1.4.1-1714-ged66853",
+			"Rev": "ed6685369740035b0af9675bf9add52d0af7657b"
+		},
+		{
 			"ImportPath": "github.com/docker/docker/pkg/units",
 			"Comment": "v1.4.1-1714-ged66853",
 			"Rev": "ed6685369740035b0af9675bf9add52d0af7657b"
@@ -394,6 +428,10 @@
 			"Rev": "ed6685369740035b0af9675bf9add52d0af7657b"
 		},
 		{
+			"ImportPath": "github.com/docker/spdystream",
+			"Rev": "e731c8f9f19ffd7e51a469a2de1580c1dfbb4fae"
+		},
+		{
 			"ImportPath": "github.com/elazarl/go-bindata-assetfs",
 			"Rev": "ae4665cf2d188c65764c73fe4af5378acc549510"
 		},
@@ -401,6 +439,10 @@
 			"ImportPath": "github.com/emicklei/go-restful",
 			"Comment": "v1.1.3-34-g5e1952e",
 			"Rev": "5e1952ed0806503c059e4463c2654200660f484b"
+		},
+		{
+			"ImportPath": "github.com/evanphx/json-patch",
+			"Rev": "7dd4489c2eb6073e5a9d7746c3274c5b5f0387df"
 		},
 		{
 			"ImportPath": "github.com/fsouza/go-dockerclient",
@@ -505,6 +547,10 @@
 			"ImportPath": "github.com/google/cadvisor/version",
 			"Comment": "0.10.1-106-gfd9f7e0",
 			"Rev": "fd9f7e0e820c7916e052e2180ee51e5ef8ad6614"
+		},
+		{
+			"ImportPath": "github.com/google/gofuzz",
+			"Rev": "bbcb9da2d746f8bdbd6a936686a0a6067ada0ec5"
 		},
 		{
 			"ImportPath": "github.com/imdario/mergo",
