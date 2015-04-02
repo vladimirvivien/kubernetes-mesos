@@ -6,6 +6,11 @@
 	],
 	"Deps": [
 		{
+			"ImportPath": "bitbucket.org/ww/goautoneg",
+			"Comment": "null-5",
+			"Rev": "75cd24fc2f2c2a2088577d12123ddee5f54e0675"
+		},
+		{
 			"ImportPath": "code.google.com/p/gcfg",
 			"Rev": "c2d3050044d05357eaf6c3547249ba57c5e235cb"
 		},
@@ -33,6 +38,20 @@
 			"ImportPath": "code.google.com/p/google-api-go-client/googleapi",
 			"Comment": "release-105",
 			"Rev": "98c78185197025f935947caac56a7b6d022f89d2"
+		},
+		{
+			"ImportPath": "github.com/beorn7/perks/quantile",
+			"Rev": "b965b613227fddccbfffe13eae360ed3fa822f8d"
+		},
+		{
+			"ImportPath": "github.com/coreos/etcd/etcdserver/etcdhttp/httptypes",
+			"Comment": "v2.0.4-288-g866a9d4",
+			"Rev": "866a9d4e41401657ea44bf539b2c5561d6fdcd67"
+		},
+		{
+			"ImportPath": "github.com/coreos/etcd/pkg/types",
+			"Comment": "v2.0.4-288-g866a9d4",
+			"Rev": "866a9d4e41401657ea44bf539b2c5561d6fdcd67"
 		},
 		{
 			"ImportPath": "github.com/GoogleCloudPlatform/kubernetes/cmd/kube-proxy",

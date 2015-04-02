@@ -76,7 +76,7 @@ func (c *MesosCloud) Clusters() (cloudprovider.Clusters, bool) {
 }
 
 // IPAddress returns an IP address of the specified instance.
-func (c *MesosCloud) IPAddress(name string) (net.IP, error) {
+func (c *MesosCloud) ipAddress(name string) (net.IP, error) {
 	if name == "" {
 		return nil, noHostNameSpecified
 	}
@@ -88,6 +88,15 @@ func (c *MesosCloud) IPAddress(name string) (net.IP, error) {
 		log.V(2).Infof("resolved host '%v' to '%v'", name, ipaddr)
 		return ipaddr, nil
 	}
+}
+
+// ExternalID returns the cloud provider ID of the specified instance.
+func (c *MesosCloud) ExternalID(instance string) (string, error) {
+	ip, err := c.ipAddress(instance)
+	if err != nil {
+		return "", err
+	}
+	return ip.String(), nil
 }
 
 // List lists instances that match 'filter' which is a regular expression
@@ -109,4 +118,13 @@ func (c *MesosCloud) List(filter string) ([]string, error) {
 // GetNodeResources gets the resources for a particular node
 func (c *MesosCloud) GetNodeResources(name string) (*api.NodeResources, error) {
 	return nil, nil
+}
+
+// NodeAddresses returns the addresses of the specified instance.
+func (c *MesosCloud) NodeAddresses(name string) ([]api.NodeAddress, error) {
+	ip, err := c.ipAddress(name)
+	if err != nil {
+		return nil, err
+	}
+	return []api.NodeAddress{{Type: api.NodeLegacyHostIP, Address: ip.String()}}, nil
 }
