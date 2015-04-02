@@ -33,9 +33,8 @@ import (
 	"github.com/GoogleCloudPlatform/kubernetes/pkg/cloudprovider"
 	nodeControllerPkg "github.com/GoogleCloudPlatform/kubernetes/pkg/cloudprovider/controller"
 	replicationControllerPkg "github.com/GoogleCloudPlatform/kubernetes/pkg/controller"
-	server "github.com/GoogleCloudPlatform/kubernetes/pkg/controllermanager"
+	"github.com/GoogleCloudPlatform/kubernetes/cmd/kube-controller-manager/app"
 	_ "github.com/GoogleCloudPlatform/kubernetes/pkg/healthz"
-	"github.com/GoogleCloudPlatform/kubernetes/pkg/hyperkube"
 	"github.com/GoogleCloudPlatform/kubernetes/pkg/resourcequota"
 	kendpoint "github.com/GoogleCloudPlatform/kubernetes/pkg/service"
 	"github.com/GoogleCloudPlatform/kubernetes/pkg/util"
@@ -47,14 +46,14 @@ import (
 
 // CMServer is the mail context object for the controller manager.
 type CMServer struct {
-	*server.CMServer
+	*app.CMServer
 	UseHostPortEndpoints bool
 }
 
 // NewCMServer creates a new CMServer with a default config.
 func NewCMServer() *CMServer {
 	s := &CMServer{
-		CMServer: server.NewCMServer(),
+		CMServer: app.NewCMServer(),
 	}
 	s.CloudProvider = "mesos"
 	s.UseHostPortEndpoints = true

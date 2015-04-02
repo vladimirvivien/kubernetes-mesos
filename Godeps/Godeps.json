@@ -20,6 +20,11 @@
 			"Rev": "7dda39b2e7d5e265014674c5af696ba4186679e9"
 		},
 		{
+			"ImportPath": "code.google.com/p/go.exp/inotify",
+			"Comment": "null-75",
+			"Rev": "bd8df7009305d6ada223ea3c95b94c0f38bfa119"
+		},
+		{
 			"ImportPath": "code.google.com/p/go.net/spdy",
 			"Comment": "null-240",
 			"Rev": "937a34c9de13c766c814510f76bca091dee06028"
@@ -40,6 +45,10 @@
 			"Rev": "98c78185197025f935947caac56a7b6d022f89d2"
 		},
 		{
+			"ImportPath": "github.com/abbot/go-http-auth",
+			"Rev": "c0ef4539dfab4d21c8ef20ba2924f9fc6f186d35"
+		},
+		{
 			"ImportPath": "github.com/beorn7/perks/quantile",
 			"Rev": "b965b613227fddccbfffe13eae360ed3fa822f8d"
 		},
@@ -52,6 +61,16 @@
 			"ImportPath": "github.com/coreos/etcd/pkg/types",
 			"Comment": "v2.0.4-288-g866a9d4",
 			"Rev": "866a9d4e41401657ea44bf539b2c5561d6fdcd67"
+		},
+		{
+			"ImportPath": "github.com/coreos/go-systemd/dbus",
+			"Comment": "v2-27-g97e243d",
+			"Rev": "97e243d21a8e232e9d8af38ba2366dfcfceebeba"
+		},
+		{
+			"ImportPath": "github.com/GoogleCloudPlatform/kubernetes/cmd/kube-controller-manager/app",
+			"Comment": "v0.14.0",
+			"Rev": "575bf6dcd09c84cb6622db3605cbc3abdb4e1baa"
 		},
 		{
 			"ImportPath": "github.com/GoogleCloudPlatform/kubernetes/cmd/kube-proxy",
@@ -199,6 +218,11 @@
 			"Rev": "575bf6dcd09c84cb6622db3605cbc3abdb4e1baa"
 		},
 		{
+			"ImportPath": "github.com/GoogleCloudPlatform/kubernetes/pkg/namespace",
+			"Comment": "v0.14.0",
+			"Rev": "575bf6dcd09c84cb6622db3605cbc3abdb4e1baa"
+		},
+		{
 			"ImportPath": "github.com/GoogleCloudPlatform/kubernetes/pkg/probe",
 			"Comment": "v0.14.0",
 			"Rev": "575bf6dcd09c84cb6622db3605cbc3abdb4e1baa"
@@ -324,6 +348,41 @@
 			"Rev": "575bf6dcd09c84cb6622db3605cbc3abdb4e1baa"
 		},
 		{
+			"ImportPath": "github.com/GoogleCloudPlatform/kubernetes/pkg/volume",
+			"Comment": "v0.14.0",
+			"Rev": "575bf6dcd09c84cb6622db3605cbc3abdb4e1baa"
+		},
+		{
+			"ImportPath": "github.com/GoogleCloudPlatform/kubernetes/pkg/volume/empty_dir",
+			"Comment": "v0.14.0",
+			"Rev": "575bf6dcd09c84cb6622db3605cbc3abdb4e1baa"
+		},
+		{
+			"ImportPath": "github.com/GoogleCloudPlatform/kubernetes/pkg/volume/gce_pd",
+			"Comment": "v0.14.0",
+			"Rev": "575bf6dcd09c84cb6622db3605cbc3abdb4e1baa"
+		},
+		{
+			"ImportPath": "github.com/GoogleCloudPlatform/kubernetes/pkg/volume/git_repo",
+			"Comment": "v0.14.0",
+			"Rev": "575bf6dcd09c84cb6622db3605cbc3abdb4e1baa"
+		},
+		{
+			"ImportPath": "github.com/GoogleCloudPlatform/kubernetes/pkg/volume/host_path",
+			"Comment": "v0.14.0",
+			"Rev": "575bf6dcd09c84cb6622db3605cbc3abdb4e1baa"
+		},
+		{
+			"ImportPath": "github.com/GoogleCloudPlatform/kubernetes/pkg/volume/nfs",
+			"Comment": "v0.14.0",
+			"Rev": "575bf6dcd09c84cb6622db3605cbc3abdb4e1baa"
+		},
+		{
+			"ImportPath": "github.com/GoogleCloudPlatform/kubernetes/pkg/volume/secret",
+			"Comment": "v0.14.0",
+			"Rev": "575bf6dcd09c84cb6622db3605cbc3abdb4e1baa"
+		},
+		{
 			"ImportPath": "github.com/GoogleCloudPlatform/kubernetes/pkg/watch",
 			"Comment": "v0.14.0",
 			"Rev": "575bf6dcd09c84cb6622db3605cbc3abdb4e1baa"
@@ -417,12 +476,27 @@
 			"Rev": "ed6685369740035b0af9675bf9add52d0af7657b"
 		},
 		{
+			"ImportPath": "github.com/docker/docker/pkg/mount",
+			"Comment": "v1.4.1-1714-ged66853",
+			"Rev": "ed6685369740035b0af9675bf9add52d0af7657b"
+		},
+		{
+			"ImportPath": "github.com/docker/docker/pkg/parsers",
+			"Comment": "v1.4.1-1714-ged66853",
+			"Rev": "ed6685369740035b0af9675bf9add52d0af7657b"
+		},
+		{
 			"ImportPath": "github.com/docker/docker/pkg/pools",
 			"Comment": "v1.4.1-1714-ged66853",
 			"Rev": "ed6685369740035b0af9675bf9add52d0af7657b"
 		},
 		{
 			"ImportPath": "github.com/docker/docker/pkg/promise",
+			"Comment": "v1.4.1-1714-ged66853",
+			"Rev": "ed6685369740035b0af9675bf9add52d0af7657b"
+		},
+		{
+			"ImportPath": "github.com/docker/docker/pkg/symlink",
 			"Comment": "v1.4.1-1714-ged66853",
 			"Rev": "ed6685369740035b0af9675bf9add52d0af7657b"
 		},
@@ -440,6 +514,31 @@
 			"ImportPath": "github.com/docker/docker/pkg/units",
 			"Comment": "v1.4.1-1714-ged66853",
 			"Rev": "ed6685369740035b0af9675bf9add52d0af7657b"
+		},
+		{
+			"ImportPath": "github.com/docker/libcontainer",
+			"Comment": "v1.4.0-52-gd7dea0e",
+			"Rev": "d7dea0e925315bab640115053204c16718839b1e"
+		},
+		{
+			"ImportPath": "github.com/docker/libcontainer/cgroups",
+			"Comment": "v1.4.0-52-gd7dea0e",
+			"Rev": "d7dea0e925315bab640115053204c16718839b1e"
+		},
+		{
+			"ImportPath": "github.com/docker/libcontainer/cgroups/fs",
+			"Comment": "v1.4.0-52-gd7dea0e",
+			"Rev": "d7dea0e925315bab640115053204c16718839b1e"
+		},
+		{
+			"ImportPath": "github.com/docker/libcontainer/cgroups/systemd",
+			"Comment": "v1.4.0-52-gd7dea0e",
+			"Rev": "d7dea0e925315bab640115053204c16718839b1e"
+		},
+		{
+			"ImportPath": "github.com/docker/libcontainer/network",
+			"Comment": "v1.4.0-52-gd7dea0e",
+			"Rev": "d7dea0e925315bab640115053204c16718839b1e"
 		},
 		{
 			"ImportPath": "github.com/docker/docker/vendor/src/code.google.com/p/go/src/pkg/archive/tar",
@@ -474,6 +573,11 @@
 		{
 			"ImportPath": "github.com/gogo/protobuf/proto",
 			"Rev": "ab6cea4a44ef42b748cd88d2d372047b75806e0c"
+		},
+		{
+			"ImportPath": "github.com/godbus/dbus",
+			"Comment": "0-7-g939230d",
+			"Rev": "939230d2086a4f1870e04c52e0a376c25bae0ec4"
 		},
 		{
 			"ImportPath": "github.com/golang/glog",
@@ -579,6 +683,11 @@
 		{
 			"ImportPath": "github.com/kardianos/osext",
 			"Rev": "efacde03154693404c65e7aa7d461ac9014acd0c"
+		},
+		{
+			"ImportPath": "github.com/kr/pty",
+			"Comment": "release.r56-25-g05017fc",
+			"Rev": "05017fcccf23c823bfdea560dcc958a136e54fb7"
 		},
 		{
 			"ImportPath": "github.com/matttproud/golang_protobuf_extensions/ext",

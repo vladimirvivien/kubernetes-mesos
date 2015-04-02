@@ -7,7 +7,7 @@ index 1507115..399c150 100644
  	return kl.machineInfo, nil
  }
 +
-+func (kl *Kubelet) ListenAndServe(address net.IP, port uint, tlsOptions *kubelet.TLSOptions, enableDebuggingHandlers bool) {
++func (kl *Kubelet) ListenAndServe(address net.IP, port uint, tlsOptions *TLSOptions, enableDebuggingHandlers bool) {
 +	ListenAndServeKubeletServer(kl, address, port, tlsOptions, enableDebuggingHandlers)
 +}
 diff --git a/cmd/kubelet/app/server.go b/cmd/kubelet/app/server.go
@@ -22,7 +22,7 @@ index 13860d6..ba251d6 100644
 +type KubeletBootstrap interface {
 +       BirthCry()
 +       StartGarbageCollection()
-+       ListenAndServe(net.IP, uint, bool, *kubelet.TLSOptions)
++       ListenAndServe(net.IP, uint, *kubelet.TLSOptions, bool)
 +       Run(<-chan kubelet.PodUpdate)
 +       RunOnce(<-chan kubelet.PodUpdate) ([]kubelet.RunPodResult, error)
 +}
