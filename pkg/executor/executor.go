@@ -12,6 +12,7 @@ import (
 	"github.com/GoogleCloudPlatform/kubernetes/pkg/api"
 	"github.com/GoogleCloudPlatform/kubernetes/pkg/client"
 	"github.com/GoogleCloudPlatform/kubernetes/pkg/kubelet"
+	"github.com/GoogleCloudPlatform/kubernetes/pkg/kubelet/container"
 	"github.com/GoogleCloudPlatform/kubernetes/pkg/kubelet/dockertools"
 	"github.com/GoogleCloudPlatform/kubernetes/pkg/watch"
 	"github.com/fsouza/go-dockerclient"
@@ -86,7 +87,7 @@ type KubernetesExecutor struct {
 	updateChan      chan<- interface{}
 	state           stateType
 	tasks           map[string]*kuberTask
-	pods            map[string]*api.BoundPod
+	pods            map[string]*api.Pod
 	lock            sync.RWMutex
 	sourcename      string
 	client          *client.Client
@@ -121,7 +122,7 @@ func New(config Config) *KubernetesExecutor {
 		updateChan:      config.Updates,
 		state:           disconnectedState,
 		tasks:           make(map[string]*kuberTask),
-		pods:            make(map[string]*api.BoundPod),
+		pods:            make(map[string]*api.Pod),
 		sourcename:      config.SourceName,
 		client:          config.APIClient,
 		done:            make(chan struct{}),
@@ -217,7 +218,7 @@ func (k *KubernetesExecutor) LaunchTask(driver bindings.ExecutorDriver, taskInfo
 		return
 	}
 
-	var pod api.BoundPod
+	var pod api.Pod
 	if err := yaml.Unmarshal(taskInfo.GetData(), &pod); err != nil {
 		log.Warningf("Failed to extract yaml data from the taskInfo.data %v\n", err)
 		k.sendStatus(driver, newStatus(taskInfo.GetTaskId(), mesos.TaskState_TASK_FAILED,
@@ -345,20 +346,23 @@ func (k *KubernetesExecutor) attemptSuicide(driver bindings.ExecutorDriver, abor
 }
 
 func (k *KubernetesExecutor) getPidInfo(name string) (api.PodStatus, error) {
-	return k.kl.GetPodStatus(name, "")
+	return k.kl.GetPodStatus(name)
 }
 
 // async continuation of LaunchTask
-func (k *KubernetesExecutor) launchTask(driver bindings.ExecutorDriver, taskId string, pod *api.BoundPod) {
+func (k *KubernetesExecutor) launchTask(driver bindings.ExecutorDriver, taskId string, pod *api.Pod) {
 
 	//HACK(jdef): cloned binding construction from k8s plugin/pkg/scheduler/scheduler.go
 	binding := &api.Binding{
 		ObjectMeta: api.ObjectMeta{
 			Namespace:   pod.Namespace,
+			Name:        pod.Name,
 			Annotations: make(map[string]string),
 		},
-		PodID: pod.Name,
-		Host:  pod.Annotations[meta.BindingHostKey],
+		Target: api.ObjectReference{
+			Kind: "Node",
+			Name: pod.Annotations[meta.BindingHostKey],
+		},
 	}
 
 	// forward the bindings that the scheduler wants to apply
@@ -373,8 +377,10 @@ func (k *KubernetesExecutor) launchTask(driver bindings.ExecutorDriver, taskId s
 		k.resetSuicideWatch(driver)
 	}
 
-	log.Infof("Binding '%v' to '%v' with annotations %+v...", binding.PodID, binding.Host, binding.Annotations)
-	ctx := api.WithNamespace(api.NewDefaultContext(), binding.Namespace)
+	log.Infof("Binding '%v/%v' to '%v' with annotations %+v...", pod.Namespace, pod.Name, binding.Target.Name, binding.Annotations)
+	ctx := api.WithNamespace(api.NewContext(), binding.Namespace)
+	// TODO(k8s): use Pods interface for binding once clusters are upgraded
+	// return b.Pods(binding.Namespace).Bind(binding)
 	err := k.client.Post().Namespace(api.NamespaceValue(ctx)).Resource("bindings").Body(binding).Do().Error()
 	if err != nil {
 		deleteTask()
@@ -383,13 +389,7 @@ func (k *KubernetesExecutor) launchTask(driver bindings.ExecutorDriver, taskId s
 		return
 	}
 
-	podFullName := kubelet.GetPodFullName(&api.BoundPod{
-		ObjectMeta: api.ObjectMeta{
-			Name:        pod.Name,
-			Namespace:   pod.Namespace,
-			Annotations: map[string]string{kubelet.ConfigSourceAnnotationKey: k.sourcename},
-		},
-	})
+	podFullName := container.GetPodFullName(pod)
 
 	// allow a recently failed-over scheduler the chance to recover the task/pod binding:
 	// it may have failed and recovered before the apiserver is able to report the updated

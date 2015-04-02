@@ -14,9 +14,11 @@ import (
 
 	"github.com/GoogleCloudPlatform/kubernetes/cmd/kubelet/app"
 	"github.com/GoogleCloudPlatform/kubernetes/pkg/api"
+	"github.com/GoogleCloudPlatform/kubernetes/pkg/cloudprovider"
 	"github.com/GoogleCloudPlatform/kubernetes/pkg/credentialprovider"
 	_ "github.com/GoogleCloudPlatform/kubernetes/pkg/healthz"
 	"github.com/GoogleCloudPlatform/kubernetes/pkg/kubelet"
+	"github.com/GoogleCloudPlatform/kubernetes/pkg/kubelet/cadvisor"
 	kconfig "github.com/GoogleCloudPlatform/kubernetes/pkg/kubelet/config"
 	"github.com/GoogleCloudPlatform/kubernetes/pkg/kubelet/dockertools"
 	"github.com/GoogleCloudPlatform/kubernetes/pkg/util"
@@ -40,7 +42,6 @@ type KubeletExecutorServer struct {
 	ProxyExec              string
 	ProxyLogfile           string
 	ProxyBindall           bool
-	TotalMaxDeadContainers uint
 	SuicideTimeout         time.Duration
 }
 
@@ -61,7 +62,6 @@ func NewKubeletExecutorServer() *KubeletExecutorServer {
 		RunProxy:               true,
 		ProxyExec:              "./kube-proxy",
 		ProxyLogfile:           "./proxy-log",
-		TotalMaxDeadContainers: 20, // arbitrary
 		SuicideTimeout:         config.DefaultSuicideTimeout,
 	}
 	if pwd, err := os.Getwd(); err != nil {
@@ -70,6 +70,7 @@ func NewKubeletExecutorServer() *KubeletExecutorServer {
 		k.RootDirectory = pwd // mesos sandbox dir
 	}
 	k.Address = util.IP(net.ParseIP(defaultBindingAddress()))
+	k.CloudProvider = "mesos" // TODO(jdef) eventually we don't want to hardcode this
 	return k
 }
 
@@ -92,7 +93,6 @@ func (s *KubeletExecutorServer) addCoreFlags(fs *pflag.FlagSet) {
 	fs.IntVar(&s.ProxyLogV, "proxy_logv", s.ProxyLogV, "Log verbosity of the child kube-proxy.")
 	fs.StringVar(&s.ProxyLogfile, "proxy_logfile", s.ProxyLogfile, "Path to the kube-proxy log file.")
 	fs.BoolVar(&s.ProxyBindall, "proxy_bindall", s.ProxyBindall, "When true will cause kube-proxy to bind to 0.0.0.0.")
-	fs.UintVar(&s.TotalMaxDeadContainers, "total_max_dead_containers", s.TotalMaxDeadContainers, "Max number of dead containers that GC allows to linger.")
 	fs.DurationVar(&s.SuicideTimeout, "suicide_timeout", s.SuicideTimeout, "Self-terminate after this period of inactivity. Zero disables suicide watch.")
 }
 
@@ -110,7 +110,7 @@ func (s *KubeletExecutorServer) Run(hks hyperkubeInterface, _ []string) error {
 	util.ReallyCrash = s.ReallyCrashForTesting
 	rand.Seed(time.Now().UTC().UnixNano())
 
-	if err := util.ApplyOomScoreAdj(s.OOMScoreAdj); err != nil {
+	if err := util.ApplyOomScoreAdj(0, s.OOMScoreAdj); err != nil {
 		log.Info(err)
 	}
 
@@ -121,32 +121,54 @@ func (s *KubeletExecutorServer) Run(hks hyperkubeInterface, _ []string) error {
 		log.Fatalf("No API client: %v", err)
 	}
 
+	log.Infof("Using root directory: %v", s.RootDirectory)
 	credentialprovider.SetPreferredDockercfgPath(s.RootDirectory)
 
+	cadvisorInterface, err := cadvisor.New(s.CadvisorPort)
+	if err != nil {
+		return err
+	}
+
+	imageGCPolicy := kubelet.ImageGCPolicy{
+		HighThresholdPercent: s.ImageGCHighThresholdPercent,
+		LowThresholdPercent:  s.ImageGCLowThresholdPercent,
+	}
+
+	cloud := cloudprovider.InitCloudProvider(s.CloudProvider, s.CloudConfigFile)
+	log.Infof("Successfully initialized cloud provider: %q from the config file: %q\n", s.CloudProvider, s.CloudConfigFile)
+
+	hostNetworkSources, err := kubelet.GetValidatedSources(strings.Split(s.HostNetworkSources, ","))
+	if err != nil {
+		return err
+	}
 	kcfg := app.KubeletConfig{
 		Address:                 s.Address,
 		AllowPrivileged:         s.AllowPrivileged,
+		HostNetworkSources:      hostNetworkSources,
 		HostnameOverride:        s.HostnameOverride,
 		RootDirectory:           s.RootDirectory,
-		FileCheckFrequency:      s.FileCheckFrequency,
-		HTTPCheckFrequency:      s.HTTPCheckFrequency,
 		PodInfraContainerImage:  s.PodInfraContainerImage,
 		SyncFrequency:           s.SyncFrequency,
 		RegistryPullQPS:         s.RegistryPullQPS,
 		RegistryBurst:           s.RegistryBurst,
 		MinimumGCAge:            s.MinimumGCAge,
+		MaxPerPodContainerCount: s.MaxPerPodContainerCount,
 		MaxContainerCount:       s.MaxContainerCount,
 		ClusterDomain:           s.ClusterDomain,
 		ClusterDNS:              s.ClusterDNS,
 		Port:                    s.Port,
-		CAdvisorPort:            s.CAdvisorPort,
+		CadvisorInterface:       cadvisorInterface,
 		EnableServer:            s.EnableServer,
 		EnableDebuggingHandlers: s.EnableDebuggingHandlers,
 		DockerClient:            dockertools.ConnectToDockerOrDie(s.DockerEndpoint),
 		KubeClient:              client,
-		EtcdClient:              kubelet.EtcdClientOrDie(util.StringList{}, ""), // this kubelet doesn't use etcd
 		MasterServiceNamespace:  s.MasterServiceNamespace,
 		VolumePlugins:           app.ProbeVolumePlugins(),
+		NetworkPlugins:                 app.ProbeNetworkPlugins(),
+		NetworkPluginName:              s.NetworkPluginName,
+		StreamingConnectionIdleTimeout: s.StreamingConnectionIdleTimeout,
+		ImageGCPolicy:                  imageGCPolicy,
+		Cloud:                          cloud,
 	}
 
 	finished := make(chan struct{})
@@ -169,8 +191,7 @@ func defaultBindingAddress() string {
 
 func (ks *KubeletExecutorServer) createAndInitKubelet(kc *app.KubeletConfig, hks hyperkubeInterface, finished chan struct{}) (app.KubeletBootstrap, *kconfig.PodConfig, error) {
 
-	watch := kubelet.SetupEventSending(kc.KubeClient, kc.Hostname)
-	pc := kconfig.NewPodConfig(kconfig.PodConfigNotificationSnapshotAndUpdates)
+	pc := kconfig.NewPodConfig(kconfig.PodConfigNotificationSnapshotAndUpdates, kc.Recorder)
 	updates := pc.Channel(MESOS_CFG_SOURCE)
 
 	// TODO(k8s): block until all sources have delivered at least one update to the channel, or break the sync loop
@@ -197,13 +218,14 @@ func (ks *KubeletExecutorServer) createAndInitKubelet(kc *app.KubeletConfig, hks
 		return nil, nil, err
 	}
 
+	//TODO(jdef) either configure Watch here with something useful, or else
+	// get rid of it from executor.Config
 	kubeletFinished := make(chan struct{})
 	exec := executor.New(executor.Config{
 		Kubelet:         kubelet,
 		Updates:         updates,
 		SourceName:      MESOS_CFG_SOURCE,
 		APIClient:       kc.KubeClient,
-		Watch:           watch,
 		Docker:          kc.DockerClient,
 		SuicideTimeout:  ks.SuicideTimeout,
 		KubeletFinished: kubeletFinished,
@@ -220,7 +242,6 @@ func (ks *KubeletExecutorServer) createAndInitKubelet(kc *app.KubeletConfig, hks
 		address:                ks.Address,
 		etcdServerList:         ks.EtcdServerList,
 		etcdConfigFile:         ks.EtcdConfigFile,
-		totalMaxDeadContainers: ks.TotalMaxDeadContainers,
 		dockerClient:           kc.DockerClient,
 		hks:                    hks,
 		kubeletFinished:        kubeletFinished,
@@ -243,8 +264,7 @@ func (ks *KubeletExecutorServer) createAndInitKubelet(kc *app.KubeletConfig, hks
 	k.BirthCry()
 	exec.Init(k.driver)
 
-	go k.GarbageCollectLoop()
-	// go k.MonitorCAdvisor(kc.CAdvisorPort) // TODO(jdef) support cadvisor at some point
+	k.StartGarbageCollection()
 
 	return k, pc, nil
 }
@@ -263,7 +283,6 @@ type kubeletExecutor struct {
 	address                util.IP
 	etcdServerList         util.StringList
 	etcdConfigFile         string
-	totalMaxDeadContainers uint
 	dockerClient           dockertools.DockerInterface
 	hks                    hyperkubeInterface
 	kubeletFinished        chan struct{}   // closed once kubelet.Run() returns
@@ -372,31 +391,6 @@ func (kl *kubeletExecutor) runProxyService() {
 	}
 }
 
-// cloned from Kubelet.GarbageCollectLoop so that our custom GarbageCollectContainers
-// gets used instead of the upstream version.
-func (kl *kubeletExecutor) GarbageCollectLoop() {
-	util.Forever(func() {
-		if err := kl.GarbageCollectContainers(); err != nil {
-			log.Errorf("Garbage collect failed: %v", err)
-		}
-	}, time.Minute*1)
-}
-
-//TODO(jdef) write up a PR for this: enforce a max number of dead containers
-func (kl *kubeletExecutor) GarbageCollectContainers() error {
-	if err := kl.Kubelet.GarbageCollectContainers(); err != nil {
-		return err
-	} else if containers, err := dockertools.GetKubeletDockerContainers(kl.dockerClient, true); err != nil {
-		return err
-	} else {
-		ids := []string{}
-		for _, container := range containers {
-			ids = append(ids, container.ID)
-		}
-		return kl.PurgeOldest(ids, int(kl.totalMaxDeadContainers))
-	}
-}
-
 // runs the main kubelet loop, closing the kubeletFinished chan when the loop exits.
 // never returns.
 func (kl *kubeletExecutor) Run(updates <-chan kubelet.PodUpdate) {
@@ -441,7 +435,7 @@ func (kl *kubeletExecutor) Run(updates <-chan kubelet.PodUpdate) {
 	// us going forward, time will tell.
 	util.Until(func() { kl.Kubelet.Run(pipe) }, 0, kl.executorDone)
 
-	err := kl.SyncPods([]api.BoundPod{}) //TODO(jdef) revisit this if/when executor failover lands
+	err := kl.SyncPods([]api.Pod{}) //TODO(jdef) revisit this if/when executor failover lands
 	if err != nil {
 		log.Errorf("failed to cleanly remove all pods and associated state: %v", err)
 	}
