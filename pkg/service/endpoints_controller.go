@@ -74,17 +74,17 @@ func (e *endpointController) SyncServiceEndpoints() error {
 		}
 
 		subsets := []api.EndpointSubset{}
-                for i := range pods.Items {
-                        pod := &pods.Items[i]
- 
-                        // TODO: Once v1beta1 and v1beta2 are EOL'ed, this can
-                        // assume that service.Spec.TargetPort is populated.
-                        _ = v1beta1.Dependency
-                        _ = v1beta2.Dependency
-                        // TODO: Add multiple-ports to Service and expose them here.
-                        portName := ""
-                        portProto := service.Spec.Protocol
-                        portNum, err := findPort(pod, service)
+		for i := range pods.Items {
+			pod := &pods.Items[i]
+
+			// TODO: Once v1beta1 and v1beta2 are EOL'ed, this can
+			// assume that service.Spec.TargetPort is populated.
+			_ = v1beta1.Dependency
+			_ = v1beta2.Dependency
+			// TODO: Add multiple-ports to Service and expose them here.
+			portName := ""
+			portProto := service.Spec.Protocol
+			portNum, err := findPort(pod, service)
 			if err != nil {
 				glog.Errorf("Failed to find port for service %s/%s: %v", service.Namespace, service.Name, err)
 				continue
@@ -108,15 +108,15 @@ func (e *endpointController) SyncServiceEndpoints() error {
 			}
 
 			// HACK(jdef): use HostIP instead of pod.CurrentState.PodIP for generic mesos compat
-                        epp := api.EndpointPort{Name: portName, Port: portNum, Protocol: portProto}
-                        epa := api.EndpointAddress{IP: pod.Status.HostIP, TargetRef: &api.ObjectReference{
-                                Kind:            "Pod",
-                                Namespace:       pod.ObjectMeta.Namespace,
-                                Name:            pod.ObjectMeta.Name,
-                                UID:             pod.ObjectMeta.UID,
-                                ResourceVersion: pod.ObjectMeta.ResourceVersion,
-                        }}
-                        subsets = append(subsets, api.EndpointSubset{Addresses: []api.EndpointAddress{epa}, Ports: []api.EndpointPort{epp}})
+			epp := api.EndpointPort{Name: portName, Port: portNum, Protocol: portProto}
+			epa := api.EndpointAddress{IP: pod.Status.HostIP, TargetRef: &api.ObjectReference{
+				Kind:            "Pod",
+				Namespace:       pod.ObjectMeta.Namespace,
+				Name:            pod.ObjectMeta.Name,
+				UID:             pod.ObjectMeta.UID,
+				ResourceVersion: pod.ObjectMeta.ResourceVersion,
+			}}
+			subsets = append(subsets, api.EndpointSubset{Addresses: []api.EndpointAddress{epa}, Ports: []api.EndpointPort{epp}})
 		}
 		subsets = endpoints.RepackSubsets(subsets)
 
@@ -134,12 +134,12 @@ func (e *endpointController) SyncServiceEndpoints() error {
 				continue
 			}
 		}
-                if reflect.DeepEqual(currentEndpoints.Subsets, subsets) {
-                        glog.V(5).Infof("endpoints are equal for %s/%s, skipping update", service.Namespace, service.Name)
-                        continue
-                }
-                newEndpoints := currentEndpoints
-                newEndpoints.Subsets = subsets
+		if reflect.DeepEqual(currentEndpoints.Subsets, subsets) {
+			glog.V(5).Infof("endpoints are equal for %s/%s, skipping update", service.Namespace, service.Name)
+			continue
+		}
+		newEndpoints := currentEndpoints
+		newEndpoints.Subsets = subsets
 
 		if len(currentEndpoints.ResourceVersion) == 0 {
 			// No previous endpoints, create them

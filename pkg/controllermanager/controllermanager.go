@@ -26,15 +26,18 @@ package controllermanager
 import (
 	"net"
 	"net/http"
+	"net/http/pprof"
 	"strconv"
 	"time"
 
+	"github.com/GoogleCloudPlatform/kubernetes/cmd/kube-controller-manager/app"
+	"github.com/GoogleCloudPlatform/kubernetes/pkg/api"
 	"github.com/GoogleCloudPlatform/kubernetes/pkg/client"
+	"github.com/GoogleCloudPlatform/kubernetes/pkg/client/record"
 	"github.com/GoogleCloudPlatform/kubernetes/pkg/cloudprovider"
 	nodeControllerPkg "github.com/GoogleCloudPlatform/kubernetes/pkg/cloudprovider/controller"
 	replicationControllerPkg "github.com/GoogleCloudPlatform/kubernetes/pkg/controller"
-	"github.com/GoogleCloudPlatform/kubernetes/cmd/kube-controller-manager/app"
-	_ "github.com/GoogleCloudPlatform/kubernetes/pkg/healthz"
+	"github.com/GoogleCloudPlatform/kubernetes/pkg/namespace"
 	"github.com/GoogleCloudPlatform/kubernetes/pkg/resourcequota"
 	kendpoint "github.com/GoogleCloudPlatform/kubernetes/pkg/service"
 	"github.com/GoogleCloudPlatform/kubernetes/pkg/util"
@@ -85,7 +88,7 @@ func (s *CMServer) verifyMinionFlags() {
 func (s *CMServer) Run(_ []string) error {
 	s.verifyMinionFlags()
 	if len(s.ClientConfig.Host) == 0 {
-		glog.Fatal("usage: controller-manager -master <master>")
+		glog.Fatal("usage: controller-manager --master <master>")
 	}
 
 	kubeClient, err := client.New(&s.ClientConfig)
@@ -93,13 +96,21 @@ func (s *CMServer) Run(_ []string) error {
 		glog.Fatalf("Invalid API configuration: %v", err)
 	}
 
-	go http.ListenAndServe(net.JoinHostPort(s.Address.String(), strconv.Itoa(s.Port)), nil)
+	go func() {
+		if s.EnableProfiling {
+			mux := http.NewServeMux()
+			mux.HandleFunc("/debug/pprof/", pprof.Index)
+			mux.HandleFunc("/debug/pprof/profile", pprof.Profile)
+			mux.HandleFunc("/debug/pprof/symbol", pprof.Symbol)
+		}
+		util.Forever(func() { http.ListenAndServe(net.JoinHostPort(s.Address.String(), strconv.Itoa(s.Port)), nil) }, 5*time.Second)
+	}()
 
 	endpoints := s.createEndpointController(kubeClient)
 	go util.Forever(func() { endpoints.SyncServiceEndpoints() }, time.Second*10)
 
 	controllerManager := replicationControllerPkg.NewReplicationManager(kubeClient)
-	controllerManager.Run(10 * time.Second)
+	controllerManager.Run(replicationControllerPkg.DefaultSyncPeriod)
 
 	kubeletClient, err := client.NewKubeletClient(&s.KubeletConfig)
 	if err != nil {
@@ -112,14 +123,19 @@ func (s *CMServer) Run(_ []string) error {
 	}
 	cloud := cloudprovider.InitCloudProvider(s.CloudProvider, s.CloudConfigFile)
 
-	nodeController := nodeControllerPkg.NewNodeController(cloud, s.MinionRegexp, s.MachineList,
-		nil, kubeClient, kubeletClient, s.RegisterRetryCount, s.PodEvictionTimeout)
-	nodeController.Run(s.NodeSyncPeriod, s.SyncNodeList)
+	nodeController := nodeControllerPkg.NewNodeController(cloud, s.MinionRegexp, s.MachineList, nil,
+		kubeClient, kubeletClient, record.FromSource(api.EventSource{Component: "controllermanager"}),
+		s.RegisterRetryCount, s.PodEvictionTimeout)
+	nodeController.Run(s.NodeSyncPeriod, s.SyncNodeList, s.SyncNodeStatus)
 
 	resourceQuotaManager := resourcequota.NewResourceQuotaManager(kubeClient)
 	resourceQuotaManager.Run(s.ResourceQuotaSyncPeriod)
 
+	namespaceManager := namespace.NewNamespaceManager(kubeClient)
+	namespaceManager.Run(s.NamespaceSyncPeriod)
+
 	select {}
+	return nil
 }
 
 func (s *CMServer) createEndpointController(client *client.Client) kmendpoint.EndpointController {
